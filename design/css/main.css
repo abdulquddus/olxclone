@@ -1,0 +1,82 @@
+@charset "utf-8";
+/* CSS Document */
+
+.wrapper
+{
+	width:1000px;
+	margin:0 auto;
+	position:relative;
+}
+.product_big_side
+{
+	width:760px;
+	float:left;
+	margin:10px 0 0 10px;
+}
+.product_title
+{
+	width:760px;
+	float:left;
+	border-bottom:1px dashed #CCCCCC;
+	padding-bottom:5px;
+}
+.product_title h1
+{
+	font:19px Verdana, Geneva, sans-serif;
+	margin:0;
+	padding:0;
+	display:inline-block;
+	color:#c21f26;
+	float:left;
+	font-weight:bold;
+}
+.product_title p
+{
+	font:12px Verdana, Geneva, sans-serif;
+	margin:6px 0 0 10px;
+	display:inline-block;
+	color:#333333;
+}
+.product_big_slider
+{
+	width:100%;
+	float:left;
+	margin-top:15px;
+}
+.ad_detail_main
+{
+	width:1000px;
+	float:left;
+	margin-top:30px;
+
+}
+.ad_detail_left
+{
+	width:610px;
+	float:left;
+}
+.ad_detail_left h1
+{
+	width:610px;
+	float:left;
+	font:18px Verdana, Geneva, sans-serif;
+	color:#c21f26;
+	border-bottom:1px solid #999;
+	padding-bottom:5px;
+	padding-left:10px;
+}
+ul.ad_detail_list
+{
+	margin:15px 10px;
+	padding:0;
+	list-style:none;
+}
+ul.ad_detail_list li
+{
+	width:580px;
+	float:left;
+	font:14px Verdana, Geneva, sans-serif;
+	background:url(../images/bulets.png) no-repeat left;
+	text-indent:20px;
+	margin:8px 0 8px 20px;
+}
