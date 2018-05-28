@@ -166,33 +166,10 @@ class SiteController extends Controller
 
      */
 
-    public function actionIndex()
-
-    {
-
-//      if (!\Yii::$app->user->isGuest) {
-
-//           $this->layout = 'main_login';
-        //           $this->layout = 'main_inner';
-
-//           }
-
-       
-
-       
-
-       
-
-        $content_inner=  \backend\models\ContentInner::find()->where(['status'=>1])->all();
-
-       
-
-    //       $regions = \frontend\models\Region::findAll(['status'=>1]);
-
-    $regions = \frontend\models\Region::findAll(['status'=>1]);     
-
+    public function actionIndex() {
+      $content_inner=  \backend\models\ContentInner::find()->where(['status'=>1])->all();
+      $regions = \frontend\models\Region::findAll(['status'=>1]);     
       return $this->render('index', ['regions'=>$regions, 'content_inner'=>$content_inner]);
-
     }
 
     /**
@@ -205,283 +182,118 @@ class SiteController extends Controller
 
      */
 
-     public function actionSearch($id)
-
+    public function actionSearch($id)
     {
+      $list = new \frontend\models\Category();
+      $item = $list->getsubcateides($id);
+      $regions = \frontend\models\Region::findAll(['status'=>1]);
+      $category = \frontend\models\Category::find()->where(['status'=>1, 'parent_id'=>0])->all();
+      $search = \frontend\models\Advertisement::find()->where(['status'=>1, 'category_id'=>$item]);
 
-        $list = new \frontend\models\Category();
+      $count=$search->count();
+      $pagination=new Pagination(['totalCount'=>$count, 'pageSize'=>10]);
 
-         $item = $list->getsubcateides($id);
+      $result=$search->offset($pagination->offset)->limit($pagination->limit)->all();
+      $submenu = new \frontend\models\Category();
 
-        
-
-        $regions = \frontend\models\Region::findAll(['status'=>1]);
-
-        $category = \frontend\models\Category::find()->where(['status'=>1, 'parent_id'=>0])->all();
-
-        $search = \frontend\models\Advertisement::find()->where(['status'=>1, 'category_id'=>$item]);
-
-        $count=$search->count();
-
-        $pagination=new Pagination(['totalCount'=>$count, 'pageSize'=>10]);
-
-        $result=$search->offset($pagination->offset)->limit($pagination->limit)->all();
-
-        $submenu = new \frontend\models\Category();
-
-        return $this->render('adsearch', ['regions'=>$regions, 'category'=>$category, 'submenu'=>$submenu, 'search'=>$search,'result'=>$result, 'pagination'=>$pagination]);
-
+      return $this->render('adsearch', ['regions'=>$regions, 'category'=>$category, 'submenu'=>$submenu, 'search'=>$search,'result'=>$result, 'pagination'=>$pagination]);
     }
 
      /**
-
-     * 
-
-     *
-
      * @return location id(region id and state id)
-
      */
 
-    public function city($city)
-
-    {
-
-   
-
-           $city = trim($city);
-
-          if(isset($city)){
-
-            $city = \frontend\models\City::find()->where(['LIKE', 'name', $city])->one();
-
-              if ($city)
-
-         return $city->id;
-
-            else
-
-                return 0;
-
-        }
-
-        else{
-
-            return 0;
-
+    public function city($city) {
+      $city = trim($city);
+      if(isset($city)) {
+        $city = \frontend\models\City::find()->where(['LIKE', 'name', $city])->one();
+        if ($city)
+            return $city->id;
+        else
+          return 0;
+      } else {
+          return 0;
         }      
-
     }
 
    
+    public function category($cate){
 
-    public function category($cate)
-
-    {
-
-       
-
-        $cate = trim($cate);
-
-        $category = \frontend\models\Category::find()->where(['LIKE', 'title', $cate])->one();
-
-        if(isset($category->id)){
-
-         $id = $category->id;
-
-        }
-
-        else{
-
-            $id = 0;           
-
-        } 
-
-      
+      $cate = trim($cate);
+      $category = \frontend\models\Category::find()->where(['LIKE', 'title', $cate])->one();
+      if(isset($category->id)){
+      $id = $category->id;
+      } else {
+        $id = 0;
+      } 
 
       $item=[$id];
-
       $lists = \frontend\models\Category::find()->where(['parent_id'=>$id])->all();
 
       foreach($lists as $list ){
+        array_push($item, $list->id);
+        $lists2 = \frontend\models\Category::find()->where(['parent_id'=>$list->id])->all();
 
-        
-
-      array_push($item, $list->id);
-
-      $lists2 = \frontend\models\Category::find()->where(['parent_id'=>$list->id])->all();
-
-                        foreach($lists2 as $list2){
-
-                        array_push($item, $list2->id);
-
-                        }
-
-         
-
+          foreach($lists2 as $list2) {
+          array_push($item, $list2->id);
+        }
       }
-
      return $item;
-
-       
-
     }
 
-    
-
-    
-
-    public function category_idby_name($cate)
-
-    {
-
-       
-
-        $cate = trim($cate);
-
-        $category = \frontend\models\Category::find()->where(['LIKE', 'title', $cate])->one();
-
-        if(isset($category->id)){
-
-         $id = $category->id;
-
-        }
-
-        else{
-
-            $id = 0;           
-
-        } 
-
+    public function category_idby_name($cate)  {
+      $cate = trim($cate);
+      $category = \frontend\models\Category::find()->where(['LIKE', 'title', $cate])->one();
       
-
-     return $id;
-
-       
-
+      if(isset($category->id)) {
+         $id = $category->id;
+        }
+        else{
+            $id = 0;           
+        } 
+      return $id;
     }
 
+    public function related_category($cate) {
 
+      $category = \frontend\models\Category::find()->where(['LIKE', 'title', $cate])->one();
 
-
-
-
-
-    
-
-    
-
-     public function related_category($cate)
-
-    {
-
-        $category = \frontend\models\Category::find()->where(['LIKE', 'title', $cate])->one();
-
-        if(isset($category->id)){
-
+      if(isset($category->id)) {
          $id = $category->id; 
-
-        }
-
-        else{
-
-            $id = 0;            
-
-        }  
-
-        
-
-       
+      }
+      else{
+        $id = 0;
+      }  
 
       $item=[$id];
-
       $lists = \frontend\models\Category::find()->where(['parent_id'=>$id])->all();
-
-     
-
-     return $lists;
-
-        
-
-        
-
-        
-
+  
+      return $lists;
     }
 
-    
-
-    public function region($region)
-
-    {
-
-        $region = str_replace(" ","", $region);
-
-        if($region != 0)
-
-        {
-
-            $regions = \frontend\models\Region::find()->Where(['LIKE', 'name', $region])->one();
-
-//         $regions = \frontend\models\Region::find()->where(['LIKE', 'slug', $region])->one();
-
-//         print_r($regions);
-
-//         return $regions->id;
-
-            if(isset($regions->id)){
-
-                return $regions->id;
-
-            }
-
-            else
-
-            {
-
-                return 0;
-
-            }
-
+    public function region($region) {
+      $region = str_replace(" ","", $region);
+      if($region != 0){
+        $regions = \frontend\models\Region::find()->Where(['LIKE', 'name', $region])->one();
+        if(isset($regions->id)){
+          return $regions->id;
+        }else {
+          return 0;
         }
+      }else {
+        return 0;
+      }
+    }
 
-        else{
-
-            return 0;
-
-     }
-
-       
-
-      
-
+    public function actionTest() {
+      $ads = \frontend\models\Advertisement::find()->where(['status'=>1])->all();
+      foreach($ads as $ad) {
+        echo $ad->id."<br />";
+        foreach($ad->formAdditionalValues as $adi){
+               echo "->".$adi->id;
+           }
         }
-
-         public function actionTest()
-
-    {
-
-             $ads = \frontend\models\Advertisement::find()->where(['status'=>1])->all();
-
-            foreach($ads as $ad){
-
-                echo $ad->id."<br />";
-
-                foreach($ad->formAdditionalValues as $adi){
-
-                    echo "->".$adi->id;
-
-                            }
-
-
-
-                }
-
-            
-
-         }
-
-        
+    }        
 
     /**
 
@@ -494,508 +306,227 @@ class SiteController extends Controller
      */
 
     public function actionSearchad()
-
     {
-        $this->layout = 'main_inner';
-        $request = Yii::$app->request;
+      $cat_ids = $_GET['id'];
+      $this->layout = 'main_inner';
+      $request = Yii::$app->request;
 
-       
+      if(!empty($_GET['location'])){
+        $city =  $_GET['location'];
+        $c = $this->city($city);
+        $city = ['city_id'=> $c]; 
+      } 
+        else{
+          $city = array();
+        }
 
-           if(!empty($_GET['location'])){
-
-               $city =  $_GET['location'];
-
-               $c = $this->city($city);
-
-               $city = ['city_id'=> $c]; 
-
-			   //print_r($city );
-
-			   //print_r('99999999999999999999999999');
-
-           } else{
-
-               $city = array();
-
-           }
-
-           
-
-           
-
-           /* if(!empty($_GET['published'])){
-
-             
-
-           } else{
-
-               $city = array();
-
-           }
-
-		   */
-
-          # on home page there are two key words regin and city 
-
+      # on home page there are two key words regin and city 
 			# on search page there are two key words location and city. 
 
           
 
-           if(!empty($_GET['category'])){
+      if(!empty($_GET['category'])){
+        $cate =  $_GET['category'];
+        $category = $this->category($cate);
+        $cat_ids = $category; 
+        $category  = ['category_id'=>$category];
+        }else{
+           $category = array();
+           // $cat_ids = array() ;
+        }
 
-              $cate =  $_GET['category'];
+  /*------------- Search filter ----------------*/ 
 
-              $category = $this->category($cate);
+      if(isset($_GET['Advertisements']['additional_optional'])){
+        $mydata = array();
 
-              $cat_ids = $category; 
+        //print_r($_GET['Advertisements']['additional_optional']);
 
-              $category  = ['category_id'=>$category];
+        foreach($_GET['Advertisements']['additional_optional'] as $op_field => $value){
 
-//              echo "category";
+        $temp = array();
 
-             
+        foreach ($value as $key => $val) {
+          $data = \frontend\models\FormAdditionalValues::find()->where(['LIKE', 'values', $val])->andWhere(['field_id'=>$op_field])->all();
+           foreach($data as $data_item) {
+            array_push($temp, $data_item->ad_id);
+          } }
 
-           }else{
+        if (count($mydata)>0) {
+          $mydata = array_intersect($mydata, $temp);
+        }
+        else {
+          $mydata =  $temp;
+        }
 
-               $category = array();
+        $myids = ['id'=>$mydata];
+      }} else {
+        $myids = [];
+      }
 
-               $cat_ids = array() ;
+      if(!empty($_GET['skey'])){
+        $key =  $_GET['skey'];
+        $key = ['LIKE', 'advertise_title', $key];
+      }else {
+        $key = array();
+      }
+   
+      if(!empty($_GET['min_price']) ){
+        $min_price = ['>=', 'price', $_GET['min_price'] ];
+      }else {
+        $min_price = array();
+      }  
 
-              
+      if(!empty($_GET['max_price'])){
+        $max_price = ['<=', 'price', $_GET['max_price']];
+      }else {
+          $max_price = array();
+      }
 
-           }
-
-////// search filter 
-
-
-
-           
-
-          
-
-             if(isset($_GET['Advertisements']['additional_optional'])){
-
-             $mydata = array();
-
-             //print_r($_GET['Advertisements']['additional_optional']);
-
-           foreach($_GET['Advertisements']['additional_optional'] as $op_field => $value){
-
- //            print_r($value);
-
-   //          print_r('-----');
-
-             //  if($value=='Honda')
-
-              // {
-
-$temp = array();
-
-foreach ($value as $key => $val)
-
-{
-
-//    print_r($val);
-
-
-
- $data = \frontend\models\FormAdditionalValues::find()->where(['LIKE', 'values', $val])->andWhere(['field_id'=>$op_field])->all();
-
-
-
- foreach($data as $data_item)
-
-                    {
-
-//                        if (in_array($data_item->ad_id, $mydata)) {
-
-//                            
-
-//                        }
-
-// else {
-
-                     array_push($temp, $data_item->ad_id);
-
- //}
-
-                       // print_r($data_item->ad_id.'<br/>');
+      if(!empty($_GET['published']) && $_GET['published'] !=0){
+        $day =  $_GET['published'];
+        $created = ['>=', 'created_date', date('Y-m-d',strtotime("-$day days"))];
+      }else {
+        $created = array();
+      }
 
      
-
-               } } //}
-
-                    //exit();
-
-if (count($mydata)>0)
-
-{
-
-$mydata = array_intersect($mydata, $temp);
-
-}
-
- else {
-
-    $mydata =  $temp;
-
-}
-
-                    $myids = ['id'=>$mydata];
-
-             }}  else {
-
-                 
-
-              $myids = [];
-
-    
-
-    
-
-}
-
-//           print_r($myids);  
-
-            if(!empty($_GET['skey'])){
-
-            $key =  $_GET['skey'];
-
-            $key = ['LIKE', 'advertise_title', $key];
-
-           }else{
-
-            $key = array();
-
-           }
-
-           
-
-            if(!empty($_GET['min_price']) ){
-
-            $min_price = ['>=', 'price', $_GET['min_price'] ];
-
-           }else{
-
-            $min_price = array();
-
-           }
-
-           
-
-            if(!empty($_GET['max_price'])){
-
-            $max_price = ['<=', 'price', $_GET['max_price']];
-
-            }else{
-
-                $max_price = array();
-
-           }
-
-            if(!empty($_GET['published']) && $_GET['published'] !=0){
-
-            $day =  $_GET['published'];
-
-            $created = ['>=', 'created_date', date('Y-m-d',strtotime("-$day days"))];
-
-           }else{
-
-               $created = array();
-
-           
-
-           }
-
-           
-
-            if(!empty($_GET['condition']) && $_GET['condition'] !='all' ){
-
-            $condition =  $_GET['condition'];
-
-            $condition = ['=','condition', $condition];
-
-            }
-
-            else 
-
-            {
-
-               $condition = array(); 
-
-            }
+      if(!empty($_GET['condition']) && $_GET['condition'] !='all' ){
+        $condition =  $_GET['condition'];
+        $condition = ['=','condition', $condition];
+      } else {
+        $condition = array(); 
+      }
 
             
 
-            if(!empty($_GET['type'])){
+      if(!empty($_GET['type'])){
+        $type = ['=','type', $_GET['type']];
+      } else {  
+        $type = array();
+      }
 
-            $type = ['=','type', $_GET['type']];
+     if (isset($_GET['sort_by']) && $_GET['sort_by'] =='low_price'){
+         $order_by = ['price'=>SORT_ASC];
+     }
+     elseif (isset($_GET['sort_by']) && $_GET['sort_by'] =='high_price'){
+         $order_by = ['price'=>SORT_DESC];
+     }
+     else {
+         $order_by = ['id'=>SORT_DESC];
+     }
 
-            }
+     if(!empty($_GET['op_fi'])){
+      $op_fi =  $_GET['op_fi'];
+     }
 
-           else
+     $ctegory_name = '';
+     if(!empty($_GET['id'])) {
+      $ctegory_name = \frontend\models\Category::find()->where(['id'=> $_GET['id'] ] )->one()->title;
 
-           {  
-
-              $type = array();
-
-           }
-
-            
-
-           if (isset($_GET['sort_by']) && $_GET['sort_by'] =='low_price')
-
-           {
-
-               $order_by = ['price'=>SORT_ASC];
-
-           }
-
-           elseif (isset($_GET['sort_by']) && $_GET['sort_by'] =='high_price')
-
-           {
-
-               $order_by = ['price'=>SORT_DESC];
-
-           }
-
-           else 
-
-           {
-
-               $order_by = ['id'=>SORT_DESC];
-
-           }
-
-            if(!empty($_GET['op_fi'])){
-
-            $op_fi =  $_GET['op_fi'];
-
-           }
-
-           $ctegory_name = '';
-
-             if(!empty($_GET['id'])){
-
-
-
-            $ctegory_name = \frontend\models\Category::find()->where(['id'=> $_GET['id'] ] )->one()->title;
-
-           // print_r($ctegory_name);
-
-               
-
-               $list = new \frontend\models\Category();
-
+      $list = new \frontend\models\Category();
       $cate = $list->getsubcateidesname($_GET['id']);
+      $category = $this->category($cate);
+      
+      // $cat_ids = $category; 
+      $category  = ['category_id'=>$category];
+      }
 
-       $category = $this->category($cate);
+      $list = new \frontend\models\Category();
 
+      if(!empty($_GET['category'])){
+        $cate =  $_GET['category'];
+        $relcategory = $this->related_category($cate);
+      }else{
+        $relcategory = array();
+      }
 
+      $search = \backend\models\Advertisement::find()->
+      where(['status'=>1])->
+      andWhere($category)->
+      // andWhere($category_filters)->
+      andWhere($max_price)->
+      andWhere($min_price)->
+      andWhere($created)->
+      andWhere($condition)->
+      andWhere($type)->
+      andWhere($city)->
+      andWhere(['sold_status'=>0])->
+      andWhere($key)->
+      andWhere($myids)->
+      orderBy($order_by);
 
-              $cat_ids = $category; 
-
-              $category  = ['category_id'=>$category];
-
-           
-
-             // print_r($category);
-
-           }
-
-           
-
-           $list = new \frontend\models\Category();
-
-    
-
- if(!empty($_GET['category'])){
-
-              $cate =  $_GET['category'];
-
-              $relcategory = $this->related_category($cate);
-
-            
-
-           }else{
-
-               $relcategory = array();
-
-              
-
-           }
-
-
-
-    $search = \backend\models\Advertisement::find()->
-
-              where(['status'=>1])->
-
-              andWhere($category)->
-
-              // andWhere($category_filters)->
-
-              andWhere($max_price)->
-
-              andWhere($min_price)->
-
-              andWhere($created)->
-
-              andWhere($condition)->
-
-              andWhere($type)->
-
-              andWhere($city)->
-
-              andWhere(['sold_status'=>0])->
-
-              andWhere($key)->
-
-            andWhere($myids)->
-
-              orderBy($order_by);
-
-    //print_r($search);
-
- 
 
 /// commercial adds 
 
-    $search_commer = \backend\models\CommercialSearchAds::find()->
+      $search_commer = \backend\models\CommercialSearchAds::find()->
+      where(['status'=>1])->
+      andWhere($category)->
+//    andWhere($category_filters)->
+//    andWhere($max_price)->
+//    andWhere($min_price)->
+//    andWhere($created)->
+//    andWhere($condition)->
+//    andWhere($type)->
+//    andWhere($city)->
+//    andWhere($key)->
+      orderBy($order_by);
 
-              where(['status'=>1])->
+      $count = $search_commer->count();
+      $pagination = new Pagination(['totalCount'=>$count, 'pageSize'=>3]);
+      $adscomm=$search_commer->offset($pagination->offset)->limit($pagination->limit)->all();
 
-              andWhere($category)->
+      $count = $search->count();
+      $pagination = new Pagination(['totalCount'=>$count, 'pageSize'=>10]);
+      $ads=$search->offset($pagination->offset)->limit($pagination->limit)->all();
 
-//              andWhere($category_filters)->
+      $regions = \frontend\models\Region::findAll(['status'=>1]);
 
-//              andWhere($max_price)->
+      $categories_list = \frontend\models\Category::find()->where(['status'=>1, 'parent_id'=>0])->all();
 
-//              andWhere($min_price)->
+      $submenu = new \frontend\models\Category();
 
-//              andWhere($created)->
-
-//              andWhere($condition)->
-
-//              andWhere($type)->
-
-//              andWhere($city)->
-
-//              andWhere($key)->
-
-              orderBy($order_by);
-
-    
-
-    
-
-          $count = $search_commer->count();
-
-          $pagination = new Pagination(['totalCount'=>$count, 'pageSize'=>3]);
-
-          $adscomm=$search_commer->offset($pagination->offset)->limit($pagination->limit)->all();
-
-    
-
-          $count = $search->count();
-
-          $pagination = new Pagination(['totalCount'=>$count, 'pageSize'=>10]);
-
-          $ads=$search->offset($pagination->offset)->limit($pagination->limit)->all();
-
-         // print_r($ads);
-
-          $regions = \frontend\models\Region::findAll(['status'=>1]);
-
-        $categories_list = \frontend\models\Category::find()->where(['status'=>1, 'parent_id'=>0])->all();
-
-        $submenu = new \frontend\models\Category();
-
-        
-
-        if ($request->isAjax) {
-
-         $regions = \frontend\models\Region::findAll(['status'=>1]);
+      if ($request->isAjax) {
+        $regions = \frontend\models\Region::findAll(['status'=>1]);
 
     //    $category = \frontend\models\Category::find()->where(['status'=>1, 'parent_id'=>0])->all();
 
         $submenu = new \frontend\models\Category();
-
         $_GET['skey'] = $key;
 
-        //echo 'good';
-
-        //exit();
-
          return $this->renderPartial('_adsearch', ['regions'=>$regions,
-
                                                   'category'=>$category,
-
                                                   'submenu'=>$submenu, 
-
                                                   'result'=>$ads,
-
                                                   'pagination'=>$pagination, 
-
                                                   'ajax'=>1,
+                                                  'search_commer'=>$adscomm                                      
 
-                                                   'search_commer'=>$adscomm                                      
+      ]);
+       } else{
+        $filtes_ids = \backend\models\CategoryAdditionalFields::find()->where([ 'category_id'=>$cat_ids])->select(['optional_field_id'])->all();
 
-            ]);
+        $f_ids =array();
+        foreach ($filtes_ids as $filtes_id) {
+          array_push($f_ids, $filtes_id->optional_field_id);
+        }
 
-    
-
-        } else{
-
-            //print_r($cat_ids); 
-
-            
-
-       $filtes_ids = \backend\models\CategoryAdditionalFields::find()->where([ 'category_id'=>$cat_ids])->select(['optional_field_id'])->all();
-
-
-
-              $f_ids =array(); 
-
-              foreach ($filtes_ids as $filtes_id) {
-
-                array_push($f_ids, $filtes_id->optional_field_id);
-
-                }
-
-          $filerts=   \backend\models\FilterName::findAll(['status'=>1,'id'=>$f_ids, 'parent_filter'=>0]);      ;
+        $filerts=   \backend\models\FilterName::findAll(['status'=>1,'id'=>$f_ids, 'parent_filter'=>0]);
 
         return $this->render('adsearch', ['regions'=>$regions,
-
                                           'category'=>$categories_list,
-
                                           'submenu'=>$submenu,
-
                                           'result'=>$ads,
-
                                           'pagination'=>$pagination,
-
                                           'relcategory'=>$relcategory,
-
                                           'filters'=>$filerts,
-
                                           'ajax'=>0,
-
                                           'selected_category'=>$cat_ids,
-
                                           'search_commer'=>$adscomm,
-
                                           'ctegory_name'=>$ctegory_name
-
                                           ]);
-
-              
-
           } 
-
-   
-
-           }
+    }
 
     
 
