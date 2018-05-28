@@ -307,7 +307,14 @@ class SiteController extends Controller
 
     public function actionSearchad()
     {
-      $cat_ids = $_GET['id'];
+      if (!empty($_GET['id'])) {
+        $cat_ids = $_GET['id'];
+      }
+      else
+      {
+        $cat_ids = array();
+      }
+      
       $this->layout = 'main_inner';
       $request = Yii::$app->request;
 
